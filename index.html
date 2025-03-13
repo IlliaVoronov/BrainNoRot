@@ -6,15 +6,25 @@
     <title>Bible Verse Scroll</title>
     <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
     <link rel="stylesheet" href="styles/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="swiper-container">
+        <button id="mute-button"><i class="fas fa-volume-up"></i></button>
+        <div class="controls">
+            <label class="switch">
+                <input type="checkbox" id="old-testament-toggle" checked>
+                <span class="slider"></span>
+            </label>
+            <span>Include OT</span>
+        </div>
         <div class="swiper-wrapper">
             <!-- Slides will be added dynamically -->
         </div>
     </div>
     <audio id="background-audio" loop></audio>
-    <button id="mute-button">Mute</button>
+
 
     <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
     <script src="script.js"></script>

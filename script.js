@@ -1,14 +1,42 @@
-// Configuration
+function hexToRgb(hex) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return { r, g, b };
+}
+
+function getLuminance({ r, g, b }) {
+    return 0.299 * r + 0.587 * g + 0.114 * b;
+}
+
+let books = []; // Will hold bibleStructure.json data
+let ntStart = -1;
+let slidesData = []; // Store slide data
+const oldTestamentToggle = document.getElementById('old-testament-toggle');
+let includeOldTestament = oldTestamentToggle.checked;
+
+oldTestamentToggle.addEventListener('change', () => {
+    includeOldTestament = oldTestamentToggle.checked;
+});// Configuration
+
 const apiKey = '505e707e8d99dae9082dd33bd91c6371'; // Replace with your API.Bible key
 const bibleId = 'de4e12af7f28f599-02'; // ESV Bible ID
 const musicFiles = [
     'music/music1.mp3',
     'music/music2.mp3',
-    'music/music3.mp3'
-
+    'music/music3.mp3',
+    'music/music4.mp3',
+    'music/music5.mp3',
+    'music/music6.mp3',
+    'music/music7.mp3',
+    'music/music8.mp3',
+    'music/music9.mp3',
+    'music/music10.mp3',
+    'music/music11.mp3',
+    'music/music12.mp3',
+    'music/music13.mp3'
 ];
-let books = []; // Will hold bibleStructure.json data
-let slidesData = []; // Store slide data
+
 let isMuted = localStorage.getItem('isMuted') === 'true';
 const audio = document.getElementById('background-audio');
 const muteButton = document.getElementById('mute-button');
@@ -23,12 +51,19 @@ const mySwiper = new Swiper('.swiper-container', {
 });
 
 // Load Bible structure
+// Load Bible structure
 fetch('bibleStructure.json')
     .then(response => response.json())
     .then(data => {
         books = data.books;
-        initSlides();
-    });
+        ntStart = books.findIndex(book => book.name === 'Matthew');
+        if (ntStart === -1) {
+            console.error('Matthew not found in books');
+            return;
+        }
+        initSlides(); // Initialize slides after loading data
+    })
+    .catch(error => console.error('Error loading bibleStructure.json:', error));
 
 // Generate random hex color
 function getRandomColor() {
@@ -37,7 +72,12 @@ function getRandomColor() {
 
 // Generate random verse reference
 function getRandomVerseReference() {
-    const bookIndex = Math.floor(Math.random() * books.length);
+    let bookIndex;
+    if (includeOldTestament) {
+        bookIndex = Math.floor(Math.random() * books.length);
+    } else {
+        bookIndex = ntStart + Math.floor(Math.random() * (books.length - ntStart));
+    }
     const book = books[bookIndex];
     const chapter = Math.floor(Math.random() * book.chapters) + 1;
     const verse = Math.floor(Math.random() * book.verses[chapter - 1]) + 1;
@@ -74,9 +114,13 @@ async function appendSlides(num) {
     const promises = Array(num).fill().map(() => generateSlideData());
     const newSlides = await Promise.all(promises);
     newSlides.forEach(slideData => {
+        const { r, g, b } = hexToRgb(slideData.bgColor);
+        const luminance = getLuminance({ r, g, b });
+        const textColor = luminance > 128 ? 'black' : 'white';
+        const textShadow = textColor === 'black' ? 'none' : '2px 2px 4px rgba(0, 0, 0, 0.5)';
         const slideHtml = `
             <div class="swiper-slide" style="background-color: ${slideData.bgColor}" data-music="${slideData.music}">
-                <div class="verse-content">
+                <div class="verse-content" style="color: ${textColor}; text-shadow: ${textShadow}">
                     <div class="verse-text">${slideData.verseText}</div>
                     <div class="verse-reference">${slideData.reference}</div>
                     <a href="https://www.biblegateway.com/passage/?search=${encodeURIComponent(slideData.reference.split(':')[0])}&version=ESV" target="_blank">Read full chapter</a>
@@ -110,11 +154,15 @@ mySwiper.on('slideChange', () => {
 });
 
 // Mute button functionality
-muteButton.textContent = isMuted ? 'Unmute' : 'Mute';
+
+// Initial state
+muteButton.innerHTML = isMuted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
+
+// Event listener
 muteButton.addEventListener('click', () => {
     isMuted = !isMuted;
     localStorage.setItem('isMuted', isMuted);
-    muteButton.textContent = isMuted ? 'Unmute' : 'Mute';
+    muteButton.innerHTML = isMuted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
     if (isMuted) {
         audio.pause();
     } else {
